@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Floating Heart Animation</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById('canvas'),
+      ctx = canvas.getContext('2d'),
+      canvasW = canvas.width = window.innerWidth,
+      canvasH = canvas.height = window.innerHeight,
+      canvasWHalf = canvasW / 2,
+      canvasHHalf = canvasH / 2,
+      xoff = canvasWHalf - 306,
+      bg = '200020', // Dark purple background
+      minSize = 1,
+      maxSize = 3,
+      minSpeed = 4,
+      maxSpeed = 12,
+      maxAmount = 60;
+
+let yoff = 50;
+let id = 0;
+let raindrops = [];
+let pulse = 0, direction = 1;
+let texts = [];
+let stars = [];
+
+// Utility functions
+function random(min, max) {
+  if (arguments.length < 2) { max = min; min = 0; }
+  return Math.floor(Math.random() * (max - min) + min);
+}
+function hexToRGB(hex, opacity) {
+  let rgb = '';
+  hex.match(/.{2}/g).forEach(n => {
+    rgb += (parseInt(n, 16)) + ',';
+  });
+  return 'rgba(' + rgb + opacity + ')';
+}
+
+// Silver sparkles
+for (let i = 0; i < 150; i++) {
+  stars.push({ x: random(canvasW), y: random(canvasH), r: Math.random() * 1.5 });
+}
+function drawStars() {
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  stars.forEach(star => {
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Raindrop class
+function Raindrop() {
+  id++;
+  this.y = random(-canvasH);
+  this.x = random(canvasW);
+  this.size = random(minSize, maxSize);
+  this.speed = random(minSpeed, maxSpeed);
+  this.color = 'hsl(' + random(270, 300) + ',80%,25%)'; // Darker purple
+  this.id = id;
+  raindrops[id] = this;
+}
+Raindrop.prototype.fall = function () {
+  this.y += this.speed;
+  if (this.y >= canvasH) {
+    this.y = random(-canvasH);
+    this.x = random(canvasW);
+  }
+  ctx.save();
+  ctx.beginPath();
+  const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+  gradient.addColorStop(0, '#aaa');
+  gradient.addColorStop(0.3, this.color);
+  gradient.addColorStop(1, 'transparent');
+  ctx.rect(this.x, this.y, this.size, maxSpeed);
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  ctx.closePath();
+  ctx.restore();
+}
+
+// Floating words that continuously move up
+const wordList = ['Love', 'Peace', 'Magic', 'Hope', 'Dream'];
+for (let i = 0; i < 10; i++) {
+  texts.push({
+    x: random(canvasW),
+    y: random(canvasH, canvasH + 200),
+    opacity: 1,
+    speed: Math.random() * 0.5 + 0.2,
+    word: wordList[random(wordList.length)]
+  });
+}
+function drawFloatingTexts() {
+  texts.forEach(t => {
+    t.y -= t.speed;
+    if (t.y < -20) {
+      t.y = canvasH + random(20, 100);
+      t.x = random(canvasW);
+      t.word = wordList[random(wordList.length)];
+    }
+    ctx.save();
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillStyle = `rgba(255,255,255,${t.opacity})`;
+    ctx.fillText(t.word, t.x, t.y);
+    ctx.restore();
+  });
+}
+
+// Heart shape with silver sparkles along the edges
+function drawHeart() {
+  ctx.save();
+  ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+  ctx.shadowBlur = 25;
+  ctx.fillStyle = hexToRGB(bg, '0.2');
+  ctx.beginPath();
+
+  // Left half
+  ctx.moveTo(0, 0);
+  ctx.lineTo(canvasWHalf, 0);
+  ctx.lineTo(304 + xoff, 97 + yoff);
+  ctx.bezierCurveTo(282 + xoff, -5 + yoff, 80 + xoff, -6 + yoff, 76 + xoff, 165 + yoff);
+  ctx.bezierCurveTo(74 + xoff, 251 + yoff, 184 + xoff, 300 + yoff, 304 + xoff, 447 + yoff);
+  ctx.lineTo(canvasWHalf, canvasH);
+  ctx.lineTo(0, canvasH);
+
+  // Right half
+  ctx.moveTo(canvasW, 0);
+  ctx.lineTo(canvasWHalf, 0);
+  ctx.lineTo(304 + xoff, 97 + yoff);
+  ctx.bezierCurveTo(326 + xoff, 5 + yoff, 528 + xoff, 6 + yoff, 532 + xoff, 165 + yoff);
+  ctx.bezierCurveTo(534 + xoff, 251 + yoff, 424 + xoff, 300 + yoff, 304 + xoff, 447 + yoff);
+  ctx.lineTo(canvasWHalf, canvasH);
+  ctx.lineTo(canvasW, canvasH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Silver sparkles outline
+  ctx.save();
+  ctx.strokeStyle = 'rgba(192,192,192,0.3)';
+  ctx.lineWidth = 1;
+  ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(304 + xoff, 97 + yoff);
+  ctx.bezierCurveTo(282 + xoff, -5 + yoff, 80 + xoff, -6 + yoff, 76 + xoff, 165 + yoff);
+  ctx.bezierCurveTo(74 + xoff, 251 + yoff, 184 + xoff, 300 + yoff, 304 + xoff, 447 + yoff);
+  ctx.bezierCurveTo(424 + xoff, 300 + yoff, 534 + xoff, 251 + yoff, 532 + xoff, 165 + yoff);
+  ctx.bezierCurveTo(528 + xoff, 6 + yoff, 326 + xoff, 5 + yoff, 304 + xoff, 97 + yoff);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Initial raindrops
+for (let i = 0; i < maxAmount; i++) {
+  new Raindrop();
+}
+
+// Animation
+function draw() {
+  // Pulse
+  pulse += direction * 0.5;
+  if (pulse > 10 || pulse < -10) direction *= -1;
+  yoff = 50 + pulse;
+
+  ctx.fillStyle = hexToRGB(bg, '0.15');
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  drawStars();
+  drawHeart();
+  drawFloatingTexts();
+
+  for (let i = 1; i < id; i++) {
+    raindrops[i].fall();
+  }
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
